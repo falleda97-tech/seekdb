@@ -1,0 +1,38 @@
+#owner: seekdb
+#owner group: shenzhen
+
+### root
+connection default;
+
+--error 0,11112
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('ollama_endpoint_validation');
+--error 0,11118
+call DBMS_AI_SERVICE.DROP_AI_MODEL('ollama_model_validation');
+
+call DBMS_AI_SERVICE.CREATE_AI_MODEL(
+  'ollama_model_validation',
+  '{"type":"completion","model_name":"ollama-completion-model"}');
+
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT(
+  'ollama_endpoint_validation',
+  '{"ai_model_name":"ollama_model_validation","url":"http://127.0.0.1:8000/api/generate","provider":"ollama","access_key":"","request_model_name":"ollama-completion-model"}');
+
+select ENDPOINT_NAME, AI_MODEL_NAME, URL, ACCESS_KEY = '', PROVIDER, REQUEST_MODEL_NAME
+  from oceanbase.DBA_OB_AI_MODEL_ENDPOINTS
+  where ENDPOINT_NAME = 'ollama_endpoint_validation';
+
+call DBMS_AI_SERVICE.ALTER_AI_MODEL_ENDPOINT(
+  'ollama_endpoint_validation', '{"provider":"OLLAMA"}');
+select ENDPOINT_NAME, ACCESS_KEY = '', PROVIDER
+  from oceanbase.DBA_OB_AI_MODEL_ENDPOINTS
+  where ENDPOINT_NAME = 'ollama_endpoint_validation';
+
+--error 11114
+call DBMS_AI_SERVICE.ALTER_AI_MODEL_ENDPOINT(
+  'ollama_endpoint_validation', '{"provider":"openai"}');
+select ENDPOINT_NAME, ACCESS_KEY = '', PROVIDER
+  from oceanbase.DBA_OB_AI_MODEL_ENDPOINTS
+  where ENDPOINT_NAME = 'ollama_endpoint_validation';
+
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('ollama_endpoint_validation');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('ollama_model_validation');

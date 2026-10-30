@@ -1,0 +1,23 @@
+#owner: seekdb
+#owner group: shenzhen
+
+### root
+connection default;
+
+# Valid JSON object configs are parsed before model lookup.
+--error 1210
+select ai_complete('__missing_ai_complete_model__', 'prompt', json_object('temperature', 0.25, 'max_tokens', 16));
+--error 1210
+select ai_complete('__missing_ai_complete_model__', 'prompt', '{"temperature":0.25,"max_tokens":16}');
+
+# Config values must be objects, regardless of whether they are JSON or text.
+--error 1210
+select ai_complete('__missing_ai_complete_model__', 'prompt', json_array());
+--error 1210
+select ai_complete('__missing_ai_complete_model__', 'prompt', '[]');
+
+# JSON null prompts and invalid AI_PROMPT indexes fail cleanly before model lookup.
+--error 1210
+select ai_complete('__missing_ai_complete_model__', cast('null' as json));
+--error 1210
+select ai_complete('__missing_ai_complete_model__', ai_prompt('{1}', 'only one argument'));

@@ -1,0 +1,184 @@
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('enhance_complete_endpoint');
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('enhance_embed_endpoint');
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('enhance_rerank_endpoint');
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('enhance_ollama_complete_endpoint');
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('enhance_ollama_embed_endpoint');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('enhance_complete_model');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('enhance_embed_model');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('enhance_rerank_model');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('enhance_ollama_complete_model');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('enhance_ollama_embed_model');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL(
+'enhance_complete_model',
+'{"type":"completion","model_name":"mock-completion"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT(
+'enhance_complete_endpoint',
+'{"ai_model_name":"enhance_complete_model","url":"http://127.0.0.1:8000/v1/chat/completions","access_key":"mock-key","provider":"openai","request_model_name":"mock-completion"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL(
+'enhance_embed_model',
+'{"type":"dense_embedding","model_name":"mock-embed"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT(
+'enhance_embed_endpoint',
+'{"ai_model_name":"enhance_embed_model","url":"http://127.0.0.1:8000/v1/embeddings","access_key":"mock-key","provider":"openai","request_model_name":"mock-embed"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL(
+'enhance_rerank_model',
+'{"type":"rerank","model_name":"mock-rerank"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT(
+'enhance_rerank_endpoint',
+'{"ai_model_name":"enhance_rerank_model","url":"http://127.0.0.1:8000/rerank","access_key":"mock-key","provider":"siliconflow","request_model_name":"mock-rerank"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL(
+'enhance_ollama_complete_model',
+'{"type":"completion","model_name":"ollama-completion"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT(
+'enhance_ollama_complete_endpoint',
+'{"ai_model_name":"enhance_ollama_complete_model","url":"http://127.0.0.1:8000/api/generate","provider":"ollama","access_key":"","request_model_name":"ollama-completion"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL(
+'enhance_ollama_embed_model',
+'{"type":"dense_embedding","model_name":"ollama-embed"}');
+call DBMS_AI_SERVICE.CREATE_AI_MODEL_ENDPOINT(
+'enhance_ollama_embed_endpoint',
+'{"ai_model_name":"enhance_ollama_embed_model","url":"http://127.0.0.1:8000/api/embed","provider":"ollama","access_key":"","request_model_name":"ollama-embed"}');
+select json_length(ai_prompt('{0}/{0}', json_array('nested', 2))) = 2;
+json_length(ai_prompt('{0}/{0}', json_array('nested', 2))) = 2
+1
+select length(ai_complete('enhance_complete_model', 'plain prompt', NULL)) > 0;
+length(ai_complete('enhance_complete_model', 'plain prompt', NULL)) > 0
+1
+select length(ai_complete(
+'enhance_complete_model',
+ai_prompt('Answer {0}', json_object('question', 'hello')),
+json_object('temperature', 0.25, 'max_tokens', 16))) > 0;
+length(ai_complete(
+'enhance_complete_model',
+ai_prompt('Answer {0}', json_object('question', 'hello')),
+json_object('temperature', 0.25, 'max_tokens', 16))) > 0
+1
+drop table if exists enhance_complete_prompts;
+create table enhance_complete_prompts (prompt longtext);
+insert into enhance_complete_prompts values (repeat('long prompt ', 256));
+select length(ai_complete(
+'enhance_complete_model',
+prompt,
+'{"temperature":0.25,"max_tokens":16}')) > 0
+from enhance_complete_prompts;
+length(ai_complete(
+'enhance_complete_model',
+prompt,
+'{"temperature":0.25,"max_tokens":16}')) > 0
+1
+drop table enhance_complete_prompts;
+select length(ai_embed('enhance_embed_model', 'item-42')) > 0;
+length(ai_embed('enhance_embed_model', 'item-42')) > 0
+1
+select length(ai_embed('enhance_embed_model', 'item-43', 2)) > 0;
+length(ai_embed('enhance_embed_model', 'item-43', 2)) > 0
+1
+drop table if exists enhance_embed_rows;
+create table enhance_embed_rows (id int primary key, content varchar(32));
+insert into enhance_embed_rows values
+(1, 'item-01'), (2, 'item-02'), (3, 'item-03'), (4, 'item-04'),
+(5, 'item-05'), (6, 'item-06'), (7, 'item-07'), (8, 'item-08'),
+(9, 'item-09'), (10, 'item-10'), (11, 'item-11'), (12, 'item-12'),
+(13, 'item-13'), (14, 'item-14'), (15, 'item-15'), (16, 'item-16'),
+(17, 'item-17'), (18, 'item-18'), (19, 'item-19'), (20, 'item-20'),
+(21, 'item-21'), (22, 'item-22'), (23, NULL);
+select id, cast(json_unquote(json_extract(
+ai_embed('enhance_embed_model', content), '$[0]')) as decimal(10, 1)) = id
+from enhance_embed_rows
+order by id;
+id	cast(json_unquote(json_extract(
+ai_embed('enhance_embed_model', content), '$[0]')) as decimal(10, 1)) = id
+1	1
+2	1
+3	1
+4	1
+5	1
+6	1
+7	1
+8	1
+9	1
+10	1
+11	1
+12	1
+13	1
+14	1
+15	1
+16	1
+17	1
+18	1
+19	1
+20	1
+21	1
+22	1
+23	NULL
+select id, ai_embed('enhance_embed_model', content) is null
+from enhance_embed_rows
+where id in (1, 23)
+order by id;
+id	ai_embed('enhance_embed_model', content) is null
+1	0
+23	1
+select id, cast(json_unquote(json_extract(
+ai_embed('enhance_embed_model', content), '$[0]')) as decimal(10, 1)) = id
+from enhance_embed_rows
+where id <= 3
+order by id
+limit 2;
+id	cast(json_unquote(json_extract(
+ai_embed('enhance_embed_model', content), '$[0]')) as decimal(10, 1)) = id
+1	1
+2	1
+select json_length(ai_rerank(
+'enhance_rerank_model',
+'rank these',
+json_array(
+'doc-01', 'doc-02', 'doc-03', 'doc-04', 'doc-05',
+'doc-06', 'doc-07', 'doc-08', 'doc-09', 'doc-10',
+'doc-11', 'doc-12', 'doc-13', 'doc-14', 'doc-15',
+'doc-16', 'doc-17', 'doc-18', 'doc-19', 'doc-20',
+'doc-21')));
+json_length(ai_rerank(
+'enhance_rerank_model',
+'rank these',
+json_array(
+'doc-01', 'doc-02', 'doc-03', 'doc-04', 'doc-05',
+'doc-06', 'doc-07', 'doc-08', 'doc-09', 'doc-10',
+'doc-11', 'doc-12', 'doc-13', 'doc-14', 'doc-15',
+'doc-16', 'doc-17', 'doc-18', 'd
+21
+select json_unquote(json_extract(ai_rerank(
+'enhance_rerank_model',
+'rank objects',
+json_array(
+json_object('id', 'first', 'text', 'doc-01'),
+json_object('id', 'third', 'text', 'doc-03'),
+json_object('id', 'second', 'text', 'doc-02')),
+'text'), '$[0].id'));
+json_unquote(json_extract(ai_rerank(
+'enhance_rerank_model',
+'rank objects',
+json_array(
+json_object('id', 'first', 'text', 'doc-01'),
+json_object('id', 'third', 'text', 'doc-03'),
+json_object('id', 'second', 'text', 'doc-02')),
+'text'), '$[0].id'))
+third
+select length(ai_complete(
+'enhance_ollama_complete_model', 'native Ollama prompt')) > 0;
+length(ai_complete(
+'enhance_ollama_complete_model', 'native Ollama prompt')) > 0
+1
+select length(ai_embed('enhance_ollama_embed_model', 'item-44')) > 0;
+length(ai_embed('enhance_ollama_embed_model', 'item-44')) > 0
+1
+drop table enhance_embed_rows;
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('enhance_complete_endpoint');
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('enhance_embed_endpoint');
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('enhance_rerank_endpoint');
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('enhance_ollama_complete_endpoint');
+call DBMS_AI_SERVICE.DROP_AI_MODEL_ENDPOINT('enhance_ollama_embed_endpoint');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('enhance_complete_model');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('enhance_embed_model');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('enhance_rerank_model');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('enhance_ollama_complete_model');
+call DBMS_AI_SERVICE.DROP_AI_MODEL('enhance_ollama_embed_model');

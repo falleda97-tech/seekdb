@@ -7,10 +7,11 @@ connection default;
 # 正确
 select ai_prompt('{0}+{1}={2} 吗？请回答true或false','1');
 
-# not support
---error 1235 
+# JSON arguments, repeated placeholders, and nested prompt values
 select ai_prompt('{0}+{1}={2} 吗？请回答true或false',json_object("a","1"));
-
+select ai_prompt('{0}/{0}',json_array("x",1));
+select ai_prompt('{0}',ai_prompt('内层提示'));
+select ai_prompt('{1}', 'only one argument');
 
 # 无参数
 --error 1582
@@ -43,13 +44,13 @@ insert into t1 values('aaa', 'bbb', 'RioBRrIKsEiedMVmtUqq', 'eIKamHGwnY');
 select ai_prompt(nr) from t1;
 select ai_prompt(a) from t1;
 select ai_prompt(b) from t1;
+select ai_prompt('{0}', b) from t1;
 select ai_prompt(c) from t1;
 
 drop table t1;
 
 
-# 表达式不支持的类型 
-# test  text/blob
+# Text LOBs are supported; binary blobs are not.
 --disable_warnings
 drop table if exists t1;
 --enable_warnings
@@ -64,12 +65,11 @@ insert into t1 values(7, 'AA', 'bb', 'CC', 'dd');
 select ai_prompt(nr) from t1;
 --error 5083
 select ai_prompt(a) from t1;
---error 5083
 select ai_prompt(b) from t1;
 --error 5083
 select ai_prompt(c) from t1;
---error 5083
 select ai_prompt(d) from t1;
+select ai_prompt('{0}', d) from t1;
 
 drop table t1;
 

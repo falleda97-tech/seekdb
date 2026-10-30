@@ -2,7 +2,17 @@ select ai_prompt('{0}+{1}={2} 吗？请回答true或false','1');
 ai_prompt('{0}+{1}={2} 吗？请回答true或false','1')
 {"args": ["1"], "template": "{0}+{1}={2} 吗？请回答true或false"}
 select ai_prompt('{0}+{1}={2} 吗？请回答true或false',json_object("a","1"));
-ERROR 0A000: json type is not supported not supported
+ai_prompt('{0}+{1}={2} 吗？请回答true或false',json_object("a","1"))
+{"args": [{"a": "1"}], "template": "{0}+{1}={2} 吗？请回答true或false"}
+select ai_prompt('{0}/{0}',json_array("x",1));
+ai_prompt('{0}/{0}',json_array("x",1))
+{"args": [["x", 1]], "template": "{0}/{0}"}
+select ai_prompt('{0}',ai_prompt('内层提示'));
+ai_prompt('{0}',ai_prompt('内层提示'))
+{"args": [{"args": [], "template": "内层提示"}], "template": "{0}"}
+select ai_prompt('{1}', 'only one argument');
+ai_prompt('{1}', 'only one argument')
+{"args": ["only one argument"], "template": "{1}"}
 select ai_prompt();
 ERROR 42000: Incorrect parameter count in the call to native function 'ai_prompt'
 select ai_prompt(1);
@@ -33,6 +43,11 @@ ai_prompt(b)
 {"args": [], "template": "oExGTLHmkvIGQekFkd\u0000\u0000"}
 {"args": [], "template": "oExGTLHmkvIGQekFkd\u0000\u0000"}
 {"args": [], "template": "RioBRrIKsEiedMVmtUqq"}
+select ai_prompt('{0}', b) from t1;
+ai_prompt('{0}', b)
+{"args": ["oExGTLHmkvIGQekFkd\u0000\u0000"], "template": "{0}"}
+{"args": ["oExGTLHmkvIGQekFkd\u0000\u0000"], "template": "{0}"}
+{"args": ["RioBRrIKsEiedMVmtUqq"], "template": "{0}"}
 select ai_prompt(c) from t1;
 ai_prompt(c)
 {"args": [], "template": "oExGTLHmkvIGQekFkd"}
@@ -51,11 +66,28 @@ ERROR 22000: Invalid data type for the operation
 select ai_prompt(a) from t1;
 ERROR 22000: Invalid data type for the operation
 select ai_prompt(b) from t1;
-ERROR 22000: Invalid data type for the operation
+ai_prompt(b)
+{"args": [], "template": "b"}
+{"args": [], "template": "bb"}
+{"args": [], "template": "bbb"}
+{"args": [], "template": "BBB"}
+{"args": [], "template": "bb"}
 select ai_prompt(c) from t1;
 ERROR 22000: Invalid data type for the operation
 select ai_prompt(d) from t1;
-ERROR 22000: Invalid data type for the operation
+ai_prompt(d)
+{"args": [], "template": "d"}
+{"args": [], "template": "dd"}
+{"args": [], "template": "ddd"}
+{"args": [], "template": "DDD"}
+{"args": [], "template": "dd"}
+select ai_prompt('{0}', d) from t1;
+ai_prompt('{0}', d)
+{"args": ["d"], "template": "{0}"}
+{"args": ["dd"], "template": "{0}"}
+{"args": ["ddd"], "template": "{0}"}
+{"args": ["DDD"], "template": "{0}"}
+{"args": ["dd"], "template": "{0}"}
 drop table t1;
 drop table if exists t1;
 create table t1 (nr char(5), a varchar(10), b BINARY(20), c VARBINARY(20));
