@@ -1,0 +1,23 @@
+#owner: seekdb
+#owner group: shenzhen
+
+### root
+connection default;
+
+# NULL model or input propagates without resolving an endpoint.
+select ai_embed(NULL, 'input');
+select ai_embed('__missing_ai_embed_model__', NULL);
+
+# Explicit dimensions must be positive integers before endpoint lookup.
+--error 1210
+select ai_embed('__missing_ai_embed_model__', 'input', 0);
+--error 1210
+select ai_embed('__missing_ai_embed_model__', 'input', -1);
+--error 1210
+select ai_embed('__missing_ai_embed_model__', 'input', NULL);
+--error 1210
+select ai_embed('__missing_ai_embed_model__', 'input', 1.5);
+
+# A valid dimension proceeds through model resolution.
+--error 1210
+select ai_embed('__missing_ai_embed_model__', 'input', 3);

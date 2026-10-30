@@ -1,0 +1,12 @@
+select ai_complete('__missing_ai_complete_model__', 'prompt', json_object('temperature', 0.25, 'max_tokens', 16));
+ERROR HY000: Incorrect arguments to ai_function, ai model not found, please check if the model exists
+select ai_complete('__missing_ai_complete_model__', 'prompt', '{"temperature":0.25,"max_tokens":16}');
+ERROR HY000: Incorrect arguments to ai_function, ai model not found, please check if the model exists
+select ai_complete('__missing_ai_complete_model__', 'prompt', json_array());
+ERROR HY000: Incorrect arguments to ai_complete, config must be a JSON object
+select ai_complete('__missing_ai_complete_model__', 'prompt', '[]');
+ERROR HY000: Incorrect arguments to ai_complete, config must be a JSON object
+select ai_complete('__missing_ai_complete_model__', cast('null' as json));
+ERROR HY000: Invalid argument
+select ai_complete('__missing_ai_complete_model__', ai_prompt('{1}', 'only one argument'));
+ERROR HY000: Incorrect arguments to ai_prompt: invalid placeholder index

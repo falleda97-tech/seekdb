@@ -1,0 +1,16 @@
+select ai_embed(NULL, 'input');
+ai_embed(NULL, 'input')
+NULL
+select ai_embed('__missing_ai_embed_model__', NULL);
+ai_embed('__missing_ai_embed_model__', NULL)
+NULL
+select ai_embed('__missing_ai_embed_model__', 'input', 0);
+ERROR HY000: Incorrect arguments to ai_embed, dimension parameter must be a positive integer
+select ai_embed('__missing_ai_embed_model__', 'input', -1);
+ERROR HY000: Incorrect arguments to ai_embed, dimension parameter must be a positive integer
+select ai_embed('__missing_ai_embed_model__', 'input', NULL);
+ERROR HY000: Incorrect arguments to ai_embed, dimension parameter must be an integer, not a decimal or float
+select ai_embed('__missing_ai_embed_model__', 'input', 1.5);
+ERROR HY000: Incorrect arguments to ai_embed, dimension parameter must be an integer, not a decimal or float
+select ai_embed('__missing_ai_embed_model__', 'input', 3);
+ERROR HY000: Incorrect arguments to ai_function, ai model not found, please check if the model exists
